@@ -1,0 +1,34 @@
+{
+  "resume_skill_count": 21,
+  "jd_skill_count": 12,
+  "match_score": 0.5,
+  "match_score_pct": "50.0%",
+  "confidence": "high",
+  "exact_matches": [
+    "API",
+    "Git",
+    "Machine Learning",
+    "PyTorch",
+    "Python",
+    "TensorFlow"
+  ],
+  "semantic_matches": [],
+  "missing_skills": [
+    "AWS",
+    "Docker",
+    "FastAPI",
+    "Kubernetes",
+    "REST",
+    "SQL"
+  ],
+  "partially_matched": [],
+  "recommendations": [
+    "Learn AWS: complete AWS Cloud Practitioner; explore EC2, S3, and Lambda",
+    "Learn Docker: learn images, containers, Dockerfile, and docker-compose",
+    "Learn FastAPI: build a typed REST API with Pydantic models and async endpoints",
+    "Learn Kubernetes: study pods, deployments, services, and the kubectl CLI",
+    "Add REST to your skill set — it is listed as a requirement",
+    "Learn SQL: master joins, aggregations, window functions, and query plans",
+    "Build a DevOps skill chain: Docker containerisation → Kubernetes orchestration → CI/CD pipeline automation with GitHub Actions."
+  ]
+}
