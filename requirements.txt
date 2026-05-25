@@ -4,3 +4,5 @@ faiss-cpu
 PyPDF2
 fastapi
 uvicorn
+requests
+python-dotenv
