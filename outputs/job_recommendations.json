@@ -1,0 +1,86 @@
+[
+  {
+    "title": "Machine Learning Engineer",
+    "company": "Luxoft",
+    "location": "Hyderabad, Telangana",
+    "match_score": 100,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [],
+    "recommendations": [],
+    "redirect_url": "https://www.adzuna.in/land/ad/5722874106?se=YFnZaVhY8RGvjPD20Sc1wQ&utm_medium=api&utm_source=2141f1d3&v=9F12DD32E1567CD409D7F3A24F7A90F69C550FA9"
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "company": "Luxoft",
+    "location": "Hyderabad, Telangana",
+    "match_score": 100,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [],
+    "recommendations": [],
+    "redirect_url": "https://www.adzuna.in/land/ad/5721770237?se=YFnZaVhY8RGvjPD20Sc1wQ&utm_medium=api&utm_source=2141f1d3&v=CAEFCAD4CA3D4459BCE69C8AC2FB5E45D3F251EC"
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "company": "VDart Digital",
+    "location": "Bangalore, Karnataka",
+    "match_score": 50,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Artificial Intelligence"
+    ],
+    "recommendations": [
+      "Add Artificial Intelligence to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5730227906?se=YFnZaVhY8RGvjPD20Sc1wQ&utm_medium=api&utm_source=2141f1d3&v=89F9FBAA1DCC7AC8FD1B55D3ED60E9BC576BCDBA"
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "company": "Webologix Ltd/ INC",
+    "location": "Karnataka, India",
+    "match_score": 40,
+    "matching_skills": [
+      "Machine Learning",
+      "Python"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Deep Learning",
+      "Generative AI",
+      "MLOps"
+    ],
+    "recommendations": [
+      "Add Deep Learning to your skill set — it is listed as a requirement",
+      "Add MLOps to your skill set — it is listed as a requirement",
+      "Add Generative AI to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5697395766?se=YFnZaVhY8RGvjPD20Sc1wQ&utm_medium=api&utm_source=2141f1d3&v=ED6F8A2FF8029E032DCFC3D4DC44A1544898070C"
+  },
+  {
+    "title": "Senior Machine Learning Engineer",
+    "company": "IBS Software",
+    "location": "Kochi, Ernakulam",
+    "match_score": 33,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Artificial Intelligence",
+      "Trivandrum"
+    ],
+    "recommendations": [
+      "Add Artificial Intelligence to your skill set — it is listed as a requirement",
+      "Add Trivandrum to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5731319951?se=YFnZaVhY8RGvjPD20Sc1wQ&utm_medium=api&utm_source=2141f1d3&v=3AD660740F2C5EE42C8DEB2D914C08C0230C692A"
+  }
+]
