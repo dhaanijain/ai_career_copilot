@@ -2,6 +2,12 @@ venv/
 __pycache__/
 *.pyc
 
+# Node
+node_modules/
+.next/
+frontend/.next/
+frontend/node_modules/
+
 # HuggingFace / models
 .cache/
 *.bin
