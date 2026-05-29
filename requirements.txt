@@ -1,8 +1,13 @@
 langchain
+langchain-text-splitters
 sentence-transformers
 faiss-cpu
 PyPDF2
+pdfplumber
+pdf2image
+pytesseract
 fastapi
 uvicorn
 requests
 python-dotenv
+supabase>=2.4.0

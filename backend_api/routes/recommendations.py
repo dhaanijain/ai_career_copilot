@@ -1,34 +1,55 @@
 import asyncio
-from fastapi import APIRouter, HTTPException
+from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+
+from backend_api.middleware.auth import optional_user
 from backend_api.schemas.recommendations import (
+    JobRecommendation,
     RecommendJobsRequest,
     RecommendationsResponse,
-    JobRecommendation,
     SemanticMatchItem,
 )
-from backend_api.services import resume_service, recommendation_service
+from backend_api.services import recommendation_service, resume_service
 
 router = APIRouter()
 
 
 @router.post("/recommend-jobs", response_model=RecommendationsResponse)
-async def recommend_jobs(body: RecommendJobsRequest):
+async def recommend_jobs(
+    body: RecommendJobsRequest,
+    user_id: Optional[str] = Depends(optional_user),
+):
     try:
         path = resume_service.get_resume_path(body.resume_id)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Resume not found. Please upload first.")
 
+    query = body.query or "software engineer machine learning"
+    location = body.location or ""
+    top_n = body.top_n or 10
+
     try:
         data = await asyncio.to_thread(
             recommendation_service.get_recommendations,
             path,
-            body.query or "software engineer machine learning",
-            body.location or "",
-            body.top_n or 10,
+            query,
+            location,
+            top_n,
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Recommendation failed: {exc}")
+
+    if user_id:
+        await asyncio.to_thread(
+            recommendation_service.save_recommendations_to_supabase,
+            data,
+            body.resume_id,
+            user_id,
+            query,
+            location,
+            top_n,
+        )
 
     jobs = []
     for job in data.get("jobs", []):

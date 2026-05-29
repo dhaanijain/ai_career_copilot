@@ -1,14 +1,20 @@
 import asyncio
-from fastapi import APIRouter, HTTPException
+from typing import Optional
 
-from backend_api.schemas.skill_gap import SkillGapRequest, SkillGapResponse, SemanticGapItem
+from fastapi import APIRouter, Depends, HTTPException
+
+from backend_api.middleware.auth import optional_user
+from backend_api.schemas.skill_gap import SemanticGapItem, SkillGapRequest, SkillGapResponse
 from backend_api.services import resume_service, skill_gap_service
 
 router = APIRouter()
 
 
 @router.post("/skill-gap", response_model=SkillGapResponse)
-async def skill_gap(body: SkillGapRequest):
+async def skill_gap(
+    body: SkillGapRequest,
+    user_id: Optional[str] = Depends(optional_user),
+):
     try:
         path = resume_service.get_resume_path(body.resume_id)
     except FileNotFoundError:
@@ -20,6 +26,15 @@ async def skill_gap(body: SkillGapRequest):
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Skill gap analysis failed: {exc}")
+
+    if user_id:
+        await asyncio.to_thread(
+            skill_gap_service.save_skill_gap_to_supabase,
+            data,
+            body.resume_id,
+            user_id,
+            body.jd_text,
+        )
 
     semantic_gaps = [
         SemanticGapItem(**sg)

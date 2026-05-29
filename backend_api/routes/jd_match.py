@@ -1,14 +1,20 @@
 import asyncio
-from fastapi import APIRouter, HTTPException
+from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+
+from backend_api.middleware.auth import optional_user
 from backend_api.schemas.jd_match import JDMatchRequest, JDMatchResponse, SemanticMatchItem
-from backend_api.services import resume_service, jd_service
+from backend_api.services import jd_service, resume_service
 
 router = APIRouter()
 
 
 @router.post("/match-jd", response_model=JDMatchResponse)
-async def match_jd(body: JDMatchRequest):
+async def match_jd(
+    body: JDMatchRequest,
+    user_id: Optional[str] = Depends(optional_user),
+):
     if not body.job_description.strip():
         raise HTTPException(status_code=400, detail="job_description cannot be empty")
 
@@ -21,6 +27,15 @@ async def match_jd(body: JDMatchRequest):
         data = await asyncio.to_thread(jd_service.match, path, body.job_description)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Matching failed: {exc}")
+
+    if user_id:
+        await asyncio.to_thread(
+            jd_service.save_jd_match_to_supabase,
+            data,
+            body.resume_id,
+            user_id,
+            body.job_description,
+        )
 
     semantic = [
         SemanticMatchItem(**sm)
