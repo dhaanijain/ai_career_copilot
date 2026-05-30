@@ -1,3 +1,4 @@
+import { supabase } from "@/lib/supabase";
 import type {
   ResumeUploadResponse,
   JDMatchRequest,
@@ -10,13 +11,21 @@ import type {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const authHeaders = await getAuthHeaders();
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
+      ...authHeaders,
       ...options.headers,
     },
   });

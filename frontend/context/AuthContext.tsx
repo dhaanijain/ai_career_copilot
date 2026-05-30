@@ -21,24 +21,38 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+async function upsertProfile(user: User, fullName?: string) {
+  await supabase.from("profiles").upsert(
+    {
+      id: user.id,
+      email: user.email ?? "",
+      full_name: fullName ?? user.user_metadata?.full_name ?? "",
+    },
+    { onConflict: "id" }
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Hydrate from existing session on mount
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
     });
 
-    // Keep state in sync as auth events fire (login, logout, token refresh)
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
+      async (event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
+
+        // Ensure profile row exists on every sign-in (covers email confirmation flow)
+        if (event === "SIGNED_IN" && newSession?.user) {
+          await upsertProfile(newSession.user);
+        }
       }
     );
 
@@ -46,12 +60,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName ?? "" } },
     });
     if (error) throw error;
+
+    // Create profile immediately when auto-confirm is enabled (session returned)
+    if (data.user && data.session) {
+      await upsertProfile(data.user, fullName);
+    }
   };
 
   const signIn = async (email: string, password: string) => {

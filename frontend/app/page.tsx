@@ -15,6 +15,7 @@ import {
   Cpu,
 } from "lucide-react";
 import GradientButton from "@/components/ui/GradientButton";
+import { useAuth } from "@/context/AuthContext";
 
 const FEATURES = [
   {
@@ -56,6 +57,8 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 export default function LandingPage() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-[#07070A] relative overflow-hidden">
       {/* Ambient background */}
@@ -74,12 +77,25 @@ export default function LandingPage() {
           <span className="font-display font-semibold text-white tracking-tight">Career Copilot</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <GradientButton variant="outline" size="sm">Dashboard</GradientButton>
-          </Link>
-          <Link href="/resume">
-            <GradientButton size="sm">Upload Resume</GradientButton>
-          </Link>
+          {user ? (
+            <>
+              <Link href="/dashboard">
+                <GradientButton variant="outline" size="sm">Dashboard</GradientButton>
+              </Link>
+              <Link href="/resume">
+                <GradientButton size="sm">Upload Resume</GradientButton>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <GradientButton variant="outline" size="sm">Login</GradientButton>
+              </Link>
+              <Link href="/signup">
+                <GradientButton size="sm">Sign Up</GradientButton>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 

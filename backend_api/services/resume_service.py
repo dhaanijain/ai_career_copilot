@@ -42,6 +42,13 @@ def extract_skills(resume_path: Path) -> list[str]:
     return run_pipeline(str(resume_path))
 
 
+def delete_local_resume(resume_path: Path) -> None:
+    try:
+        resume_path.unlink(missing_ok=True)
+    except Exception:
+        pass
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Supabase persistence (only called when user_id is available)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -93,23 +100,6 @@ def save_resume_to_supabase(
                 "version": 1,
             }
         ).execute()
-
-        # 4. Upsert individual skill rows for analytics
-        if skills:
-            skill_rows = [
-                {
-                    "resume_id": resume_id,
-                    "user_id": user_id,
-                    "skill_name": skill,
-                    "confidence": 1.0,
-                    "source": "pipeline",
-                }
-                for skill in skills
-            ]
-            client.table("extracted_skills").upsert(
-                skill_rows,
-                on_conflict="resume_id,skill_name",
-            ).execute()
 
     except Exception as exc:
         print(f"[resume_service] Supabase save failed (non-fatal): {exc}")

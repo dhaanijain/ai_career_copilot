@@ -22,6 +22,7 @@ async def upload_resume(
     if not content:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
+    path = None
     try:
         resume_id, path = await asyncio.to_thread(
             resume_service.save_resume, content, file.filename
@@ -29,8 +30,10 @@ async def upload_resume(
         skills = await asyncio.to_thread(resume_service.extract_skills, path)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Processing failed: {exc}")
+    finally:
+        if path is not None:
+            await asyncio.to_thread(resume_service.delete_local_resume, path)
 
-    # Persist to Supabase when the user is authenticated
     if user_id:
         await asyncio.to_thread(
             resume_service.save_resume_to_supabase,

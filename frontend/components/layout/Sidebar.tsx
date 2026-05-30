@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -23,8 +24,28 @@ const NAV_ITEMS = [
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
+function getInitials(name?: string | null, email?: string | null): string {
+  if (name && name.trim()) {
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase();
+  }
+  if (email) return email[0].toUpperCase();
+  return "?";
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  const displayName =
+    user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const email = user?.email ?? "";
+  const initials = getInitials(user?.user_metadata?.full_name, user?.email);
 
   return (
     <aside className="hidden md:flex flex-col w-60 shrink-0 bg-[#0D0D10] border-r border-white/[0.06] h-full">
@@ -41,7 +62,8 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          const active =
+            pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
             <Link key={item.href} href={item.href}>
@@ -64,7 +86,9 @@ export default function Sidebar() {
                 <Icon
                   className={cn(
                     "w-4 h-4 relative z-10 transition-colors",
-                    active ? "text-purple-400" : "text-[#A1A1AA] group-hover:text-white"
+                    active
+                      ? "text-purple-400"
+                      : "text-[#A1A1AA] group-hover:text-white"
                   )}
                 />
                 <span className="relative z-10">{item.label}</span>
@@ -77,8 +101,24 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom CTA */}
-      <div className="px-3 pb-5">
+      {/* User info + CTA */}
+      <div className="px-3 pb-5 space-y-3">
+        {/* User profile card */}
+        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-600 to-blue-accent flex items-center justify-center text-white text-[11px] font-semibold shrink-0 select-none">
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-white truncate leading-tight">
+              {displayName}
+            </p>
+            <p className="text-[11px] text-[#A1A1AA] truncate leading-tight mt-0.5">
+              {email}
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
         <Link href="/resume">
           <motion.div
             whileHover={{ scale: 1.02 }}
