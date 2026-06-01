@@ -1,0 +1,174 @@
+[
+  {
+    "title": "Machine Learning Engineer",
+    "company": "Luxoft",
+    "location": "Hyderabad, Telangana",
+    "match_score": 100,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [],
+    "recommendations": [],
+    "redirect_url": "https://www.adzuna.in/land/ad/5722874106?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=9F12DD32E1567CD409D7F3A24F7A90F69C550FA9"
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "company": "Luxoft",
+    "location": "Hyderabad, Telangana",
+    "match_score": 100,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [],
+    "recommendations": [],
+    "redirect_url": "https://www.adzuna.in/land/ad/5721770237?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=CAEFCAD4CA3D4459BCE69C8AC2FB5E45D3F251EC"
+  },
+  {
+    "title": "Senior Machine Learning Engineer",
+    "company": "Luxoft India",
+    "location": "Hyderabad, Telangana",
+    "match_score": 100,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [],
+    "recommendations": [],
+    "redirect_url": "https://www.adzuna.in/land/ad/5715808679?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=D3925642B08457BAC43E9A4258591BC01FA18609"
+  },
+  {
+    "title": "Machine Learning Engineer II",
+    "company": "Navi",
+    "location": "Bangalore, Karnataka",
+    "match_score": 50,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "MLOps"
+    ],
+    "recommendations": [
+      "Add MLOps to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5744638761?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=D541122BD1C75F706EF13F5064D6C40C52CAE6A7"
+  },
+  {
+    "title": "Senior Machine Learning Engineer",
+    "company": "Maganti IT Resources, LLC",
+    "location": "Hyderabad, Telangana",
+    "match_score": 50,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Artificial Intelligence"
+    ],
+    "recommendations": [
+      "Add Artificial Intelligence to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5743506268?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=2D2AD4D9EA6C13E1005D84E925AF508A23C3A60A"
+  },
+  {
+    "title": "Staff Machine Learning Engineer",
+    "company": "Angel One",
+    "location": "Bangalore, Karnataka",
+    "match_score": 50,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Hybrid"
+    ],
+    "recommendations": [
+      "Add Hybrid to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5730228329?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=56A33F13DCFE3A507FAEF0A573CF99934E4787C2"
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "company": "Webologix Ltd/ INC",
+    "location": "Karnataka, India",
+    "match_score": 40,
+    "matching_skills": [
+      "Machine Learning",
+      "Python"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Deep Learning",
+      "Generative AI",
+      "MLOps"
+    ],
+    "recommendations": [
+      "Add Deep Learning to your skill set — it is listed as a requirement",
+      "Add MLOps to your skill set — it is listed as a requirement",
+      "Add Generative AI to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5697395766?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=ED6F8A2FF8029E032DCFC3D4DC44A1544898070C"
+  },
+  {
+    "title": "Lead Machine Learning Engineer",
+    "company": "UST",
+    "location": "Thiruvananthapuram, Kerala",
+    "match_score": 40,
+    "matching_skills": [
+      "Machine Learning",
+      "NLP"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Artificial Intelligence",
+      "Deep Learning",
+      "Generative AI"
+    ],
+    "recommendations": [
+      "Add Artificial Intelligence to your skill set — it is listed as a requirement",
+      "Add Deep Learning to your skill set — it is listed as a requirement",
+      "Add Generative AI to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5743506170?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=450E1235846A7F05A9CB507CC2831A7E249F8FE1"
+  },
+  {
+    "title": "Senior Machine Learning Engineer",
+    "company": "Morningstar",
+    "location": "Navi Mumbai, Maharashtra",
+    "match_score": 33,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Generative AI",
+      "LLMs"
+    ],
+    "recommendations": [
+      "Add Generative AI to your skill set — it is listed as a requirement",
+      "Add LLMs to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5736371176?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=0A071AED47F95A3D42AEABD6168DF6C6E36B27C2"
+  },
+  {
+    "title": "Machine Learning Engineer - H&E Staining",
+    "company": "Micro Crispr Pvt. Ltd.",
+    "location": "Delhi, India",
+    "match_score": 33,
+    "matching_skills": [
+      "Machine Learning"
+    ],
+    "semantic_matches": [],
+    "missing_skills": [
+      "Deep Learning",
+      "PhD"
+    ],
+    "recommendations": [
+      "Add Deep Learning to your skill set — it is listed as a requirement",
+      "Add PhD to your skill set — it is listed as a requirement"
+    ],
+    "redirect_url": "https://www.adzuna.in/land/ad/5401068127?se=XpSTkolb8RG1g60cORqbZQ&utm_medium=api&utm_source=2141f1d3&v=A2DD8963D0736B5200BC95827A1B9071A29CD895"
+  }
+]

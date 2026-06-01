@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-AI Career Copilot — currently implements a RAG pipeline to extract technical skills from PDF resumes using semantic search and NLP.
+AI Career Copilot — RAG pipeline for resume skill extraction + semantic Resume ↔ JD matching with gap analysis and recommendations.
 
 ## Setup & Commands
 
@@ -15,29 +15,59 @@ venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the pipeline
-python app/rag_pipeline.py
+# Resume skill extraction only
+python app/rag_pipeline.py [resume.pdf]
+
+# Full Resume ↔ JD matching (uses built-in example JD)
+python -m app.jd_matcher
+
+# With a custom resume and JD text file
+python -m app.jd_matcher data/resume.pdf data/job_posting.txt
 ```
 
 No test runner, linter, or build system is configured yet.
 
 ## Architecture
 
-The entire pipeline lives in `app/rag_pipeline.py` as a sequence of functions operating on a single PDF resume (`data/Dhaani_Jain_resume.pdf`).
+```
+ai_career_copilot/
+├── app/
+│   ├── __init__.py          — package marker
+│   ├── rag_pipeline.py      — PDF loading, OCR, chunking, FAISS, skill extraction
+│   ├── skill_extractor.py   — text-based skill extraction (for JDs / plain text)
+│   ├── embedding_engine.py  — skill-level embedding + FAISS index helpers
+│   ├── retrieval_engine.py  — FAISS retrieval pipeline for raw text documents
+│   ├── scoring_engine.py    — exact/semantic matching, scoring, recommendations
+│   ├── jd_matcher.py        — orchestration + CLI entry point
+│   └── utils.py             — normalize, deduplicate, format utilities
+├── data/
+│   └── Dhaani_Jain_resume.pdf
+├── models/                  — reserved for future model artifacts
+└── outputs/                 — JSON match reports written here
+```
 
-**Data flow:**
+**Resume extraction pipeline (`rag_pipeline.py`):**
 
-1. **Load** — `load_pdf()` extracts text via `pdfplumber`; falls back to OCR (`pytesseract` + `pdf2image`) when extracted text is sparse (<50 chars).
-2. **Clean** — `clean_text()` normalizes whitespace and removes special characters.
-3. **Chunk** — `chunk_text()` splits text into 500-char chunks with 100-char overlap using LangChain's `RecursiveCharacterTextSplitter`.
-4. **Filter sections** — `filter_skill_chunks()` keeps only chunks containing skill-related keywords, so the vector search is scoped to the relevant parts of the resume.
-5. **Embed** — `create_embeddings()` encodes chunks with `sentence-transformers` (`all-MiniLM-L6-v2`).
-6. **Index** — `create_faiss_index()` builds an in-memory FAISS L2 index from the embeddings.
-7. **Retrieve** — `retrieve_chunks()` encodes a fixed query string and fetches the top-5 most similar chunks.
-8. **Extract** — `extract_skills()` uses regex + keyword matching with OCR-correction rules (e.g., `"openal"` → `"OpenAI"`) and proper-casing for known skill names.
-9. **Filter technical** — `filter_technical_skills()` removes soft-skill words (team, communication, leadership, etc.).
+1. **Load** — `load_pdf()` extracts text via `pdfplumber`; falls back to OCR (`pytesseract` + `pdf2image`) at 300 DPI when the text layer is sparse.
+2. **OCR fix** — `normalize_ocr()` corrects misreads (`"tensor flow"` → `"tensorflow"`) before any analysis.
+3. **Clean** — `clean_text()` strips PII (emails, URLs, phones) and normalises whitespace.
+4. **Sections** — `extract_skill_sections()` isolates skill-bearing headings; full doc used as fallback.
+5. **Chunk** — `chunk_text()` splits with deduplication via MD5 content hashing.
+6. **Embed** — `embed()` encodes with `all-MiniLM-L6-v2` and L2-normalises (cosine space).
+7. **Index** — `build_index()` builds an in-memory FAISS `IndexFlatIP`.
+8. **Retrieve** — `retrieve_chunks()` runs multi-query retrieval with diversity filtering.
+9. **Extract** — `extract_technical_skills()` uses whitelist-first extraction with confidence scoring.
+
+**JD matching pipeline (`jd_matcher.py`):**
+
+1. Resume skills are extracted via `run_pipeline()` from `rag_pipeline.py`.
+2. JD skills are extracted via `skill_extractor.extract_skills_from_text()` — no PDF, no FAISS overhead for short texts.
+3. `scoring_engine.score_match()` runs two-pass matching: exact → semantic (cosine ≥ 0.80).
+4. `MatchResult` contains score, matches, gaps, and recommendations; `.to_dict()` for JSON output.
+5. Report printed to terminal; JSON saved to `outputs/match_report.json`.
 
 **Key design notes:**
-- FAISS index is built in-memory each run — there is no persistent vector store.
-- `fastapi` and `uvicorn` are in `requirements.txt` but no API layer exists yet; the project runs as a plain script.
-- OCR corrections and known-skill casing are hardcoded in `extract_skills()` — extend those dicts when adding support for new skills or fixing misreads.
+- SKILL_TAXONOMY in `rag_pipeline.py` is the single source of truth for skill normalisation — extend it to support new skills; no logic changes needed elsewhere.
+- FAISS index is built in-memory each run — no persistent vector store.
+- All public functions accept dynamic text inputs — nothing is hardcoded in business logic.
+- `MatchResult.to_dict()` is the integration contract for future Streamlit / FastAPI frontends.
