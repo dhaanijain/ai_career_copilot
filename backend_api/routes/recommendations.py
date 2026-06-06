@@ -15,7 +15,21 @@ from backend_api.services import recommendation_service, resume_service
 router = APIRouter()
 
 
-@router.post("/recommend-jobs", response_model=RecommendationsResponse)
+@router.post(
+    "/recommend-jobs",
+    response_model=RecommendationsResponse,
+    summary="Fetch live job recommendations ranked by resume match",
+    description=(
+        "Fetches live jobs from the Adzuna API, scores each against your resume skills "
+        "using semantic matching, and returns them ranked by match score. "
+        "Pass `resume_skills` from a previous upload response to skip re-running the ML pipeline."
+    ),
+    responses={
+        404: {"description": "Resume not found — upload first"},
+        422: {"description": "Validation error (invalid UUID, top_n out of range, etc.)"},
+        500: {"description": "Job fetching or ranking failed"},
+    },
+)
 async def recommend_jobs(
     body: RecommendJobsRequest,
     user_id: Optional[str] = Depends(optional_user),

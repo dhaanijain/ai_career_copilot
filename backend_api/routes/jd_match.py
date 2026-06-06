@@ -10,7 +10,21 @@ from backend_api.services import jd_service, resume_service
 router = APIRouter()
 
 
-@router.post("/match-jd", response_model=JDMatchResponse)
+@router.post(
+    "/match-jd",
+    response_model=JDMatchResponse,
+    summary="Match a resume against a job description",
+    description=(
+        "Runs two-pass semantic matching (exact → cosine ≥ 0.80) between extracted "
+        "resume skills and JD skills. Returns a match score (0–100), confidence rating, "
+        "matching/missing skills, and actionable recommendations."
+    ),
+    responses={
+        404: {"description": "Resume not found — upload first"},
+        422: {"description": "Validation error (invalid UUID, empty JD, etc.)"},
+        500: {"description": "Matching pipeline failed"},
+    },
+)
 async def match_jd(
     body: JDMatchRequest,
     user_id: Optional[str] = Depends(optional_user),

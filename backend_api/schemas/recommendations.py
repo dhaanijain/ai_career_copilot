@@ -1,13 +1,27 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
 
 class RecommendJobsRequest(BaseModel):
-    resume_id: str
-    query: Optional[str] = "software engineer machine learning"
-    location: Optional[str] = ""
-    top_n: Optional[int] = 10
-    resume_skills: Optional[List[str]] = None  # skip re-extraction if provided
+    resume_id: str = Field(
+        ...,
+        pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        description="UUID of the previously uploaded resume",
+    )
+    query: Optional[str] = Field(
+        "software engineer machine learning",
+        max_length=200,
+        description="Job search query sent to Adzuna",
+    )
+    location: Optional[str] = Field(
+        "", max_length=100, description="Location filter (city, country, etc.)"
+    )
+    top_n: Optional[int] = Field(
+        10, ge=1, le=50, description="Number of job recommendations to return (1–50)"
+    )
+    resume_skills: Optional[List[str]] = Field(
+        None, description="Pre-extracted skills — skips re-running the ML pipeline"
+    )
 
 
 class SemanticMatchItem(BaseModel):
