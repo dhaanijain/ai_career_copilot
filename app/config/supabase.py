@@ -24,24 +24,20 @@ SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
 SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
-_required = {
-    "SUPABASE_URL": SUPABASE_URL,
-    "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
-    "SUPABASE_SERVICE_ROLE_KEY": SUPABASE_SERVICE_ROLE_KEY,
-}
-_missing = [k for k, v in _required.items() if not v]
-if _missing:
-    raise EnvironmentError(
-        f"Missing required Supabase environment variables: {', '.join(_missing)}. "
-        "Copy .env.example → .env and fill in the values."
-    )
-
 
 def get_supabase_client() -> Client:
     """Service role client — bypasses RLS. Use for all backend writes."""
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        raise EnvironmentError(
+            "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env"
+        )
     return create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 
 def get_supabase_anon_client() -> Client:
     """Anon client — respects RLS. Pass a user JWT via set_session() for scoped reads."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        raise EnvironmentError(
+            "Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env"
+        )
     return create_client(SUPABASE_URL, SUPABASE_ANON_KEY)

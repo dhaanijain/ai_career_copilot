@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Optional
 
 from app.rag_pipeline import run_pipeline
-from app.jd_matcher import match_resume_to_jd
+from app.scoring_engine import score_match
+from app.skill_extractor import extract_skills_from_text
 
 MODERN_TECH_REFERENCE = """
 Python Machine Learning Deep Learning PyTorch TensorFlow Scikit-learn
@@ -21,11 +22,18 @@ React TypeScript Next.js System Design Linux Git
 """
 
 
-def analyze(resume_path: Path, jd_text: str | None = None) -> dict:
+def analyze(
+    resume_path: Path,
+    jd_text: Optional[str] = None,
+    resume_skills: Optional[list] = None,
+) -> dict:
     reference = jd_text if jd_text and jd_text.strip() else MODERN_TECH_REFERENCE
     reference_used = "custom" if jd_text and jd_text.strip() else "built_in"
-    resume_skills = run_pipeline(str(resume_path))
-    result = match_resume_to_jd(str(resume_path), reference)
+    # Use pre-extracted skills from the frontend if provided — avoids re-running the pipeline
+    if not resume_skills:
+        resume_skills = run_pipeline(str(resume_path))
+    jd_skills = extract_skills_from_text(reference)
+    result = score_match(resume_skills, jd_skills)
 
     return {
         "resume_skills": resume_skills,

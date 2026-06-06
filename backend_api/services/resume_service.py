@@ -22,7 +22,7 @@ UPLOADS_DIR = Path(__file__).parent.parent / "uploads"
 # Local helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def save_resume(content: bytes, original_filename: str) -> tuple[str, Path]:
+def save_resume(content: bytes, original_filename: str) -> "tuple[str, Path]":
     """Write the file to the local uploads directory. Returns (resume_id, path)."""
     resume_id = str(uuid.uuid4())
     dest = UPLOADS_DIR / f"{resume_id}.pdf"

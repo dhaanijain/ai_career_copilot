@@ -21,7 +21,7 @@ export default function JobsPage() {
 
   const handleFetch = () => {
     if (!resumeId) return;
-    fetch(resumeId, query, location, topN);
+    fetch(resumeId, query, location, topN, resumeSkills.length ? resumeSkills : undefined);
   };
 
   const avgMatch = data?.jobs.length

@@ -15,7 +15,10 @@ from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
 
 from .embedding_engine import build_skill_index, get_skill_embeddings
+from .logger import get_logger
 from .utils import normalize_skill_name
+
+log = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Tunable constants — adjust here without touching matching logic below
@@ -347,7 +350,15 @@ def score_match(
     Returns:
         MatchResult — serialisable via .to_dict(), ready for any frontend.
     """
+    log.info(
+        "score_match: %d resume skills vs %d JD skills (semantic_threshold=%.2f)",
+        len(resume_skills), len(jd_skills), semantic_threshold,
+    )
+    log.debug("score_match resume_skills: %s", resume_skills)
+    log.debug("score_match jd_skills: %s", jd_skills)
+
     if not jd_skills:
+        log.warning("score_match: no JD skills provided — returning empty result")
         return MatchResult(
             resume_skills=resume_skills,
             jd_skills=[],
@@ -361,11 +372,25 @@ def score_match(
         )
 
     exact, unmatched_resume, unmatched_jd = _exact_match(resume_skills, jd_skills)
+    log.info(
+        "Exact match: %d matched, %d unmatched resume skills, %d unmatched JD skills",
+        len(exact), len(unmatched_resume), len(unmatched_jd),
+    )
+    log.debug("Exact matches: %s", exact)
+
     semantic, missing = _semantic_match(unmatched_resume, unmatched_jd, semantic_threshold)
+    log.info(
+        "Semantic match: %d semantic matches, %d still missing",
+        len(semantic), len(missing),
+    )
+    log.debug("Semantic matches: %s", [(m.resume_skill, m.jd_skill, m.similarity) for m in semantic])
+    log.debug("Missing skills: %s", missing)
 
     score = _weighted_score(exact, semantic, len(jd_skills))
     confidence = _confidence_label(len(jd_skills))
     recs = _recommendations(missing, semantic)
+
+    log.info("Final score=%.4f, confidence=%s, recommendations=%d", score, confidence, len(recs))
 
     return MatchResult(
         resume_skills=resume_skills,

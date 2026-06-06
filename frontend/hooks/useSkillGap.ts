@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import { analyzeSkillGap } from "@/services/api";
-import { SkillGapResponse } from "@/types";
+import { useResume } from "@/context/ResumeContext";
 
 export function useSkillGap() {
-  const [data, setData] = useState<SkillGapResponse | null>(null);
+  const { skillGapData, setSkillGapData } = useResume();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const analyze = async (resumeId: string, jdText?: string) => {
+  const analyze = async (resumeId: string, jdText?: string, resumeSkills?: string[]) => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await analyzeSkillGap({ resume_id: resumeId, jd_text: jdText });
-      setData(res);
+      const res = await analyzeSkillGap({
+        resume_id: resumeId,
+        jd_text: jdText,
+        resume_skills: resumeSkills,
+      });
+      setSkillGapData(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {
@@ -23,5 +27,5 @@ export function useSkillGap() {
     }
   };
 
-  return { analyze, data, loading, error };
+  return { analyze, data: skillGapData, loading, error };
 }

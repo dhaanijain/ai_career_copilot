@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { ChevronRight, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -33,14 +32,13 @@ export default function Navbar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
   const label = BREADCRUMBS[pathname] ?? "AI Career Copilot";
 
   const handleLogout = async () => {
     try {
       await signOut();
       toast("success", "Signed out successfully.");
-      router.push("/login");
+      // Navigation is handled by AppLayout's useEffect which watches for user becoming null
     } catch {
       toast("error", "Failed to sign out. Please try again.");
     }

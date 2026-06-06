@@ -16,9 +16,12 @@ import os
 import sys
 from typing import List
 
+from .logger import get_logger, log_file_path
 from .rag_pipeline import run_pipeline
 from .scoring_engine import MatchResult, score_match
 from .skill_extractor import extract_skills_from_text
+
+log = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Hardcoded example JD — swap for sys.argv, textarea input, or an API response
@@ -78,22 +81,37 @@ def match_resume_to_jd(
     Returns:
         MatchResult — call .to_dict() for a JSON-serialisable representation.
     """
+    log.info(
+        "=== match_resume_to_jd START: resume='%s', resume_conf=%.2f, jd_conf=%.2f, semantic_threshold=%.2f ===",
+        resume_path, resume_confidence, jd_confidence, semantic_threshold,
+    )
     print(f"\n{'═' * 62}")
     print(f"{'  AI Career Copilot — Resume vs JD Analysis':^62}")
     print(f"{'═' * 62}")
 
     print("\n📄  [1/3] Extracting resume skills via RAG pipeline...")
+    log.info("[1/3] Extracting resume skills from '%s'", resume_path)
     resume_skills = run_pipeline(resume_path, confidence_threshold=resume_confidence)
+    log.info("[1/3] Resume skills (%d): %s", len(resume_skills), resume_skills)
     print(f"\n      ✓ Resume skills extracted: {len(resume_skills)}")
 
     print("\n📋  [2/3] Parsing job description skills...")
+    log.info("[2/3] Parsing JD skills (jd_text length=%d chars)", len(jd_text))
     jd_skills = parse_jd(jd_text, confidence_threshold=jd_confidence)
+    log.info("[2/3] JD skills (%d): %s", len(jd_skills), jd_skills)
     print(f"      ✓ JD skills detected      : {len(jd_skills)}")
 
     print("\n⚙   [3/3] Running scoring engine...")
+    log.info("[3/3] Running scoring engine")
     result = score_match(resume_skills, jd_skills, semantic_threshold=semantic_threshold)
+    log.info(
+        "[3/3] Scoring complete: score=%.4f, confidence=%s, exact=%d, semantic=%d, missing=%d",
+        result.match_score, result.confidence,
+        len(result.exact_matches), len(result.semantic_matches), len(result.missing_skills),
+    )
     print(f"      ✓ Scoring complete")
 
+    log.info("=== match_resume_to_jd END ===")
     return result
 
 
@@ -197,6 +215,9 @@ def print_report(result: MatchResult, width: int = 62) -> None:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    print(f"  Log file → {log_file_path()}")
+    log.info("CLI invoked with args: %s", sys.argv)
+
     _resume_path: str = (
         sys.argv[1] if len(sys.argv) > 1 else "data/Dhaani_Jain_resume.pdf"
     )
@@ -207,8 +228,15 @@ if __name__ == "__main__":
     else:
         _jd_text = _EXAMPLE_JD
 
-    _result = match_resume_to_jd(_resume_path, _jd_text)
-    print_report(_result)
+    try:
+        _result = match_resume_to_jd(_resume_path, _jd_text)
+        print_report(_result)
 
-    _saved = save_report(_result)
-    print(f"  Report saved → {_saved}\n")
+        _saved = save_report(_result)
+        log.info("Report saved to %s", _saved)
+        print(f"  Report saved → {_saved}\n")
+    except Exception as _exc:
+        log.error("Fatal error during pipeline execution", exc_info=True)
+        print(f"\n  ERROR: {_exc}")
+        print(f"  Full traceback written to: {log_file_path()}")
+        sys.exit(1)

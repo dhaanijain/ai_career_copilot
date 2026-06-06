@@ -1,469 +1,502 @@
-# 🚀 AI Career Copilot
+# AI Career Copilot
 
-AI Career Copilot is an AI-powered resume analysis, skill extraction, and job matching platform that intelligently processes resumes — including image-based and Canva-generated PDFs — using OCR, NLP, semantic embeddings, vector similarity search, and AI-driven retrieval pipelines.
-
-The project is designed to solve one of the biggest real-world problems in recruitment and career platforms:
-
-> Extracting meaningful technical information from noisy, unstructured resumes and intelligently matching candidates with relevant jobs.
-
-Unlike traditional keyword-based ATS systems, AI Career Copilot combines:
-- OCR-based document understanding
-- NLP preprocessing
-- Semantic embeddings
-- Vector databases (FAISS)
-- Intelligent retrieval pipelines
-- Skill extraction and normalization
-- Resume-to-job matching
-
-This enables the system to work across multiple resume formats while handling OCR noise, unstructured layouts, and semantic understanding of skills.
+AI-powered platform that extracts skills from resumes, matches them against job descriptions, identifies skill gaps, and surfaces live job recommendations — all scored via semantic similarity rather than keyword matching.
 
 ---
 
-# ✨ Features
+## Table of Contents
 
-## 📄 Resume Parsing
-- Supports PDF resumes
-- Handles text-based PDFs
-- Supports image-based resumes
-- Works with Canva-generated resumes
-- OCR fallback for scanned resumes
-
----
-
-## 🧠 AI-Powered Skill Extraction
-- Extracts technical skills intelligently
-- Uses semantic retrieval instead of plain keyword search
-- Removes noisy/non-technical content
-- Handles OCR mistakes
-- Deduplicates extracted skills
-- Normalizes extracted technologies
-
----
-
-## 🔍 Semantic Search with FAISS
-- Converts resume chunks into embeddings
-- Stores embeddings in a FAISS vector index
-- Retrieves relevant resume sections using semantic similarity
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Environment Variables](#environment-variables)
+- [Setup Guide](#setup-guide)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Running the Application](#running-the-application)
+- [API Reference](#api-reference)
+- [ML Pipeline Explained](#ml-pipeline-explained)
+- [Supabase Setup](#supabase-setup)
+- [Logging & Debugging](#logging--debugging)
+- [Contributing](#contributing)
 
 ---
 
-## 📊 Resume vs Job Description Matching
-- Compare resume skills with job descriptions
-- Calculate semantic match score
-- Detect missing skills
-- Identify matching technologies
-- Generate improvement suggestions
+## Features
 
-Example:
-
-```text
-Resume Match Score: 82%
-
-✅ Matching Skills:
-- Python
-- TensorFlow
-- SQL
-
-❌ Missing Skills:
-- Docker
-- Kubernetes
-- AWS
-```
-
----
-
-## 💼 AI Job Recommendation System (Planned)
-The future version of the system will:
-- Recommend jobs based on resume skills
-- Fetch live job listings using APIs
-- Rank jobs using semantic similarity
-- Identify career gaps
-- Suggest learning paths
-
----
-
-## 🌐 Streamlit Web Application (Planned)
-- Resume upload UI
-- Job description upload
-- Live skill extraction
-- Match score visualization
-- Interactive dashboards
-
----
-
-# 🛠️ Tech Stack
-
-| Technology | Purpose |
+| Feature | Description |
 |---|---|
-| Python | Core development |
+| Resume Parsing | PDF text extraction with OCR fallback for scanned/Canva PDFs |
+| Skill Extraction | RAG pipeline: FAISS + sentence embeddings + whitelist-first confidence scoring |
+| JD Matching | Two-pass matching (exact → semantic cosine ≥ 0.80) with score, gaps, and tips |
+| Skill Gap Analysis | Compares resume skills against a JD or market baseline; returns recommendations |
+| Live Job Recommendations | Fetches from Adzuna API, ranks results by semantic match score |
+| Auth | Optional Supabase JWT auth; results persisted to your account when signed in |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Next.js 14 Frontend                       │
+│   (App Router · Tailwind · Framer Motion · Supabase Auth)   │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ HTTP  /api/v1/*
+┌─────────────────────────▼───────────────────────────────────┐
+│                  FastAPI Backend  (Python)                    │
+│                                                              │
+│  POST /api/v1/upload-resume                                  │
+│    └─▶ resume_service → RAG Pipeline                         │
+│         pdfplumber → OCR fallback → clean → chunk            │
+│         → SentenceTransformer embed → FAISS → skill extract  │
+│                                                              │
+│  POST /api/v1/match-jd                                       │
+│    └─▶ jd_service → skill_extractor → scoring_engine        │
+│         exact match + cosine similarity ≥ 0.80              │
+│                                                              │
+│  POST /api/v1/skill-gap                                      │
+│    └─▶ skill_gap_service → scoring_engine                    │
+│         resume skills vs JD / market baseline               │
+│                                                              │
+│  POST /api/v1/recommend-jobs                                 │
+│    └─▶ recommendation_engine → Adzuna API → scoring_engine  │
+│         live jobs ranked by semantic match                   │
+└──────────────────┬──────────────────────┬───────────────────┘
+                   │                      │
+         ┌─────────▼──────┐    ┌──────────▼────────┐
+         │  Supabase DB   │    │  Supabase Storage  │
+         │  (PostgreSQL)  │    │  (resume PDFs)     │
+         └────────────────┘    └───────────────────-┘
+```
+
+---
+
+## Tech Stack
+
+**Backend**
+
+| Package | Purpose |
+|---|---|
+| FastAPI | REST API framework |
 | pdfplumber | PDF text extraction |
-| pytesseract | OCR support |
-| pdf2image | PDF-to-image conversion |
-| Sentence Transformers | Semantic embeddings |
-| FAISS | Vector similarity search |
-| LangChain Text Splitter | Chunking pipeline |
-| NumPy | Embedding processing |
-| Regex / NLP | Cleaning and filtering |
-| Streamlit (Planned) | Web UI |
-| Adzuna API (Planned) | Job recommendation engine |
+| pytesseract + pdf2image | OCR fallback for image-based PDFs |
+| sentence-transformers (`all-MiniLM-L6-v2`) | Semantic embeddings |
+| FAISS (`faiss-cpu`) | In-memory vector similarity search |
+| supabase-py | Auth JWT verification + DB/Storage |
+| python-dotenv | Environment variable loading |
+| uvicorn | ASGI server |
+
+**Frontend**
+
+| Package | Purpose |
+|---|---|
+| Next.js 14 (App Router) | React framework |
+| Tailwind CSS | Styling |
+| Framer Motion | Animations |
+| @supabase/supabase-js | Auth + session management |
+| lucide-react | Icons |
+
+**Infrastructure**
+
+| Service | Purpose |
+|---|---|
+| Supabase | Auth, PostgreSQL DB, file storage |
+| Adzuna API | Live job listings |
 
 ---
 
-# 🤖 AI Concepts Used
+## Project Structure
 
-This project incorporates several AI, NLP, and Information Retrieval concepts:
-
-## Natural Language Processing (NLP)
-- Text preprocessing
-- Cleaning and normalization
-- Entity filtering
-- Skill extraction
-
----
-
-## Semantic Embeddings
-- Resume chunks converted into vector embeddings
-- Semantic understanding of resume content
-- Context-aware retrieval
-
----
-
-## Vector Databases
-- FAISS vector index
-- Similarity-based retrieval
-- Efficient nearest-neighbor search
-
----
-
-## Retrieval-Augmented Processing
-- Retrieve relevant resume sections
-- Process only meaningful chunks
-- Improve extraction accuracy
-
----
-
-## OCR-Based Document Intelligence
-- Handles scanned/image-based resumes
-- Supports Canva-generated resumes
-- Extracts information from non-selectable PDFs
-
----
-
-## AI Recommendation Systems (Planned)
-- Resume-to-job similarity scoring
-- Semantic ranking of jobs
-- Skill-gap analysis
-- Career recommendations
-
----
-
-# 🏗️ Project Architecture
-
-```text
-PDF Resume
-    ↓
-Text Extraction (pdfplumber)
-    ↓
-OCR Fallback (Tesseract)
-    ↓
-Text Cleaning & Normalization
-    ↓
-Chunking (LangChain)
-    ↓
-Sentence Embeddings
-    ↓
-FAISS Vector Index
-    ↓
-Semantic Retrieval
-    ↓
-Skill Extraction & Filtering
-    ↓
-Resume vs JD Matching
-    ↓
-Job Recommendations (Planned)
 ```
-
----
-
-# 📁 Folder Structure
-
-```text
 ai_career_copilot/
+├── app/                          # Core ML pipeline (Python)
+│   ├── rag_pipeline.py           # PDF load → OCR → chunk → embed → FAISS → skills
+│   ├── skill_extractor.py        # Skill extraction from plain text (JDs)
+│   ├── embedding_engine.py       # SentenceTransformer helpers
+│   ├── retrieval_engine.py       # FAISS retrieval pipeline
+│   ├── scoring_engine.py         # Exact + semantic matching, scoring, recommendations
+│   ├── recommendation_engine.py  # Adzuna API + per-job scoring
+│   ├── jd_matcher.py             # CLI entry point
+│   ├── logger.py                 # Centralised rotating log → logs/copilot.log
+│   ├── config/
+│   │   ├── __init__.py           # Adzuna credentials (lazy validation)
+│   │   └── supabase.py           # Supabase client factories (lazy validation)
+│   └── utils.py                  # Normalise, deduplicate, format
 │
-├── app/
-│   └── rag_pipeline.py
+├── backend_api/                  # FastAPI application
+│   ├── main.py                   # App factory, CORS, /api/v1 prefix, error handler
+│   ├── middleware/
+│   │   └── auth.py               # optional_user / require_user JWT middleware
+│   ├── routes/
+│   │   ├── resume.py             # POST /api/v1/upload-resume
+│   │   ├── jd_match.py           # POST /api/v1/match-jd
+│   │   ├── skill_gap.py          # POST /api/v1/skill-gap
+│   │   └── recommendations.py   # POST /api/v1/recommend-jobs
+│   ├── schemas/                  # Pydantic request/response models
+│   └── services/                 # Business logic, Supabase persistence
 │
-├── data/
-│   └── resume.pdf
+├── frontend/                     # Next.js 14 application
+│   ├── app/
+│   │   ├── (auth)/               # Login / signup pages
+│   │   └── (app)/                # Protected pages (resume, jd-match, skill-gap, jobs)
+│   ├── components/ui/            # Reusable UI components
+│   ├── context/                  # ResumeContext, AuthContext, ToastContext
+│   ├── hooks/                    # useJobRecommendations, useSkillGap, useResume
+│   ├── services/api.ts           # Typed fetch wrapper with AbortController timeouts
+│   └── types/index.ts            # Shared TypeScript interfaces
 │
-├── requirements.txt
-├── README.md
-├── .gitignore
-│
-└── venv/
+├── data/                         # Sample resumes
+├── logs/                         # Auto-created; rotating log files (gitignored)
+├── outputs/                      # CLI JSON match reports
+├── .env                          # Backend environment variables (not committed)
+├── frontend/.env.local           # Frontend environment variables (not committed)
+└── requirements.txt
 ```
 
 ---
 
-# ⚙️ Installation Guide
+## Environment Variables
 
-## 1. Clone the Repository
+### Backend — `.env` (project root)
+
+```env
+# Supabase
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<publishable-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-secret-key>
+
+# Adzuna Jobs API (https://developer.adzuna.com/)
+ADZUNA_APP_ID=<your-app-id>
+ADZUNA_APP_KEY=<your-app-key>
+
+# Optional: comma-separated extra CORS origins
+# ALLOWED_ORIGINS=https://yourapp.com,https://staging.yourapp.com
+```
+
+### Frontend — `frontend/.env.local`
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-anon-key>
+
+# Optional: override backend URL (defaults to http://localhost:8000)
+# NEXT_PUBLIC_API_URL=https://api.yourapp.com
+```
+
+---
+
+## Setup Guide
+
+### Prerequisites
+
+| Tool | Version | Notes |
+|---|---|---|
+| Python | 3.9+ | 3.10+ works too |
+| Node.js | 18+ | LTS recommended |
+| Tesseract OCR | 4.x+ | Required for image-based PDFs |
+| Poppler | latest | Required for `pdf2image` |
+
+**Install Tesseract & Poppler**
+
+macOS:
+```bash
+brew install tesseract poppler
+```
+
+Ubuntu/Debian:
+```bash
+sudo apt-get install tesseract-ocr poppler-utils
+```
+
+Windows:
+- Tesseract: https://github.com/UB-Mannheim/tesseract/wiki
+- Poppler: https://github.com/oschwartz10612/poppler-windows/releases
+
+### Backend Setup
 
 ```bash
-git clone <your-repository-link>
+# 1. Clone the repo
+git clone <repo-url>
 cd ai_career_copilot
-```
 
----
-
-## 2. Create Virtual Environment
-
-### Windows
-
-```bash
+# 2. Create and activate virtual environment
 python -m venv venv
-venv\Scripts\activate
-```
 
-### macOS/Linux
-
-```bash
-python3 -m venv venv
+# macOS/Linux
 source venv/bin/activate
-```
 
----
+# Windows
+venv\Scripts\activate
 
-## 3. Install Dependencies
-
-```bash
+# 3. Install dependencies
 pip install -r requirements.txt
+
+# 4. Create .env file (see Environment Variables above)
+cp .env.example .env   # then fill in your values
+
+# 5. Start the backend
+uvicorn backend_api.main:app --reload --port 8000
 ```
 
----
+The API is now available at `http://localhost:8000`.  
+Interactive docs: `http://localhost:8000/docs`
 
-# 🔥 OCR Setup
-
-This project uses Tesseract OCR for image-based resumes.
-
----
-
-## Windows Setup
-
-Download:
-https://github.com/UB-Mannheim/tesseract/wiki
-
-After installation:
-
-```python
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-```
-
----
-
-## macOS Setup
+### Frontend Setup
 
 ```bash
-brew install tesseract
-brew install poppler
+cd frontend
+
+# 1. Install dependencies
+npm install
+
+# 2. Create frontend/.env.local (see Environment Variables above)
+
+# 3. Start the dev server
+npm run dev
 ```
+
+The frontend is now available at `http://localhost:3000`.
 
 ---
 
-## Linux Setup
+## Running the Application
+
+You need **two terminals** running simultaneously:
+
+| Terminal | Command | URL |
+|---|---|---|
+| Backend | `uvicorn backend_api.main:app --reload --port 8000` | http://localhost:8000 |
+| Frontend | `cd frontend && npm run dev` | http://localhost:3000 |
+
+### CLI Usage (backend only, no frontend)
 
 ```bash
-sudo apt install tesseract-ocr
-sudo apt install poppler-utils
+# Resume skill extraction only
+python app/rag_pipeline.py data/resume.pdf
+
+# Resume vs JD matching (uses built-in example JD)
+python -m app.jd_matcher
+
+# With custom resume and JD
+python -m app.jd_matcher data/resume.pdf data/job_posting.txt
 ```
 
 ---
 
-# ▶️ Running the Project
+## API Reference
 
-Place your resume inside the `data/` folder.
+All endpoints are versioned under `/api/v1`. Full interactive docs at `http://localhost:8000/docs`.
 
-Example:
+### `POST /api/v1/upload-resume`
 
-```text
-/data/resume.pdf
+Upload a PDF resume. Returns a `resume_id` used by all other endpoints.
+
+**Request:** `multipart/form-data`
+
+| Field | Type | Description |
+|---|---|---|
+| `file` | File | PDF resume, max 5 MB |
+
+**Response:**
+```json
+{
+  "resume_id": "550e8400-e29b-41d4-a716-446655440000",
+  "skills": ["python", "pytorch", "docker", "kubernetes"],
+  "total_skills": 4
+}
 ```
 
-Run:
+---
+
+### `POST /api/v1/match-jd`
+
+Match a resume against a job description.
+
+**Request body:**
+```json
+{
+  "resume_id": "550e8400-e29b-41d4-a716-446655440000",
+  "job_description": "We are looking for a Senior ML Engineer with experience in Python, PyTorch..."
+}
+```
+
+**Response:**
+```json
+{
+  "match_score": 78.5,
+  "confidence": "high",
+  "total_jd_skills": 12,
+  "matching_skills": ["python", "pytorch"],
+  "semantic_matches": [
+    { "resume_skill": "tensorflow", "jd_skill": "deep learning", "similarity": 0.83 }
+  ],
+  "missing_skills": ["kubernetes", "aws"],
+  "recommendations": ["Learn Kubernetes for container orchestration"],
+  "category_tips": { "cloud": "AWS is in high demand for ML deployment roles" }
+}
+```
+
+---
+
+### `POST /api/v1/skill-gap`
+
+Identify skill gaps (optionally compared to a specific JD).
+
+**Request body:**
+```json
+{
+  "resume_id": "550e8400-e29b-41d4-a716-446655440000",
+  "jd_text": "Optional JD text for targeted analysis...",
+  "resume_skills": ["python", "pytorch"]
+}
+```
+
+> Pass `resume_skills` from a previous upload response to skip re-running the ML pipeline (~30x faster).
+
+**Response:**
+```json
+{
+  "resume_skills": ["python", "pytorch"],
+  "missing_skills": ["kubernetes", "aws"],
+  "semantic_gaps": [],
+  "recommendations": ["Learn Docker and Kubernetes for MLOps workflows"],
+  "category_tips": {},
+  "match_score": 62.0
+}
+```
+
+---
+
+### `POST /api/v1/recommend-jobs`
+
+Fetch live jobs from Adzuna, ranked by semantic match against your resume.
+
+**Request body:**
+```json
+{
+  "resume_id": "550e8400-e29b-41d4-a716-446655440000",
+  "query": "machine learning engineer",
+  "location": "London",
+  "top_n": 10,
+  "resume_skills": ["python", "pytorch"]
+}
+```
+
+**Response:**
+```json
+{
+  "jobs": [
+    {
+      "title": "Senior ML Engineer",
+      "company": "Acme Corp",
+      "location": "London",
+      "match_score": 85.2,
+      "matching_skills": ["python", "pytorch"],
+      "semantic_matches": [],
+      "missing_skills": ["spark"],
+      "recommendations": [],
+      "redirect_url": "https://www.adzuna.co.uk/jobs/..."
+    }
+  ],
+  "total_jobs": 10,
+  "resume_skills": ["python", "pytorch"]
+}
+```
+
+---
+
+### `GET /health`
+
+```json
+{ "status": "ok", "version": "1.0.0" }
+```
+
+---
+
+## ML Pipeline Explained
+
+### Resume Extraction (`app/rag_pipeline.py`)
+
+```
+PDF file
+  │
+  ▼
+1. LOAD — pdfplumber extracts the text layer
+  │         Falls back to OCR (pytesseract + pdf2image at 300 DPI)
+  │         when the text layer is sparse or missing
+  ▼
+2. CLEAN — normalize_ocr() fixes common misreads ("tensor flow" → "tensorflow")
+  │         clean_text() strips PII (emails, URLs, phones), normalises whitespace
+  ▼
+3. SECTION — extract_skill_sections() isolates skill-bearing headings
+  │           Full document used as fallback
+  ▼
+4. CHUNK — chunk_text() splits with deduplication via MD5 content hashing
+  ▼
+5. EMBED — all-MiniLM-L6-v2 encodes each chunk, L2-normalised (cosine space)
+  ▼
+6. INDEX — FAISS IndexFlatIP built in-memory (no persistent store needed)
+  ▼
+7. RETRIEVE — multi-query retrieval with diversity filtering
+  ▼
+8. EXTRACT — whitelist-first extraction with confidence scoring
+  │           SKILL_TAXONOMY is the single source of truth for normalisation
+  ▼
+skills: ["python", "pytorch", "docker", ...]
+```
+
+### JD Matching (`app/scoring_engine.py`)
+
+Two-pass matching:
+1. **Exact match** — normalised string equality after SKILL_TAXONOMY lookup
+2. **Semantic match** — cosine similarity ≥ 0.80 between `all-MiniLM-L6-v2` embeddings
+
+Score = `(exact_matches + semantic_matches) / total_jd_skills × 100`
+
+Confidence thresholds: high ≥ 70%, medium ≥ 40%, low < 40%
+
+### Skip Re-extraction Optimisation
+
+When `resume_skills` is passed in any request body, the backend skips the entire RAG pipeline (steps 1–8 above). This reduces latency from ~30–60 s to ~1–3 s for skill gap and job recommendation endpoints.
+
+---
+
+## Supabase Setup
+
+See [`docs/supabase_setup.md`](docs/supabase_setup.md) for the full Supabase configuration guide including:
+- Auth settings (email confirmation toggle)
+- Database schema (tables, RLS policies)
+- Storage bucket setup
+
+---
+
+## Logging & Debugging
+
+Logs are written to `logs/copilot.log` (auto-created, gitignored).
+
+- **File:** all levels (DEBUG+), 5 MB max per file, 3 rotating backups
+- **Console:** WARNING+ only (no noise during normal operation)
+- **Uncaught exceptions** are automatically captured
+
+If you encounter an issue, send `logs/copilot.log` for debugging.
 
 ```bash
-python app/rag_pipeline.py
+# View the last 50 log lines
+tail -n 50 logs/copilot.log
+
+# Follow logs live
+tail -f logs/copilot.log
 ```
 
 ---
 
-# 💻 Example Output
+## Contributing
 
-```text
-🤖 EXTRACTED SKILLS:
-
-- Python
-- Java
-- TensorFlow
-- PyTorch
-- SQL
-- Git
-- GitHub
-- Figma
-- Machine Learning
-- Data Structures
-- Object Oriented Programming
-```
-
----
-
-# 🧩 Challenges Solved
-
-## Problem 1: Canva/Image-Based PDFs
-Many resumes contain non-selectable text.
-
-### Solution
-Implemented OCR fallback using:
-- pdf2image
-- pytesseract
-
----
-
-## Problem 2: OCR Noise
-
-OCR introduced issues like:
-
-```text
-OpenAI → OpenAl
-PyTorch → Py Torch
-```
-
-### Solution
-Added normalization and OCR correction logic.
-
----
-
-## Problem 3: Noisy Extraction
-
-Initial extraction included:
-- Education
-- Contact information
-- Grades
-- Random phrases
-
-### Solution
-Implemented:
-- semantic retrieval
-- technical keyword filtering
-- strict non-skill filtering
-
----
-
-## Problem 4: Resume Format Variations
-
-Different resumes use:
-- different layouts
-- bullets
-- columns
-- custom formatting
-
-### Solution
-Built a generalized extraction pipeline instead of hardcoded parsing.
-
----
-
-# 🚀 Future Improvements
-
-## 🌐 Streamlit Web App
-- Upload resume through UI
-- Upload job description
-- Visualize match score
-- Interactive dashboard
-
----
-
-## 📊 Resume vs Job Matching
-- Compare resume with multiple jobs
-- Rank matching jobs
-- Missing skill analysis
-- ATS optimization suggestions
-
----
-
-## 💼 Job Recommendation Engine
-Planned integration with:
-- Adzuna API
-- JSearch API
-
-Features:
-- Live job recommendations
-- Semantic job ranking
-- AI-powered career matching
-
----
-
-## 🧠 LLM Integration
-- AI-generated resume feedback
-- Resume summarization
-- Career recommendations
-- AI interview preparation
-
----
-
-## ☁️ Deployment
-- Streamlit Cloud
-- Hugging Face Spaces
-- Docker
-- AWS/GCP deployment
-
----
-
-# 📚 Learning Outcomes
-
-This project helped explore:
-- NLP pipelines
-- Vector databases
-- Semantic embeddings
-- OCR systems
-- Document intelligence
-- Retrieval-Augmented Generation concepts
-- AI recommendation systems
-- Resume parsing architectures
-- Semantic search systems
-
----
-
-# 🌍 Real-World Applications
-
-This system is similar to technologies used in:
-- ATS (Applicant Tracking Systems)
-- AI recruitment platforms
-- HR-tech systems
-- Resume screening tools
-- Talent intelligence platforms
-- AI career recommendation engines
-
----
-
-# 👨‍💻 Author
-
-## Dhaani Jain
-
-Computer Science undergraduate focused on:
-- AI Systems
-- NLP
-- Machine Learning
-- Software Engineering
-- Intelligent Automation
-
-### LinkedIn
-https://www.linkedin.com/in/dhaani-jain-a42886286/
-
-### GitHub
-https://github.com/dhaanijain
-
----
-
-# 📄 License
-
-This project is open-source and available under the MIT License.
+1. Fork the repo and create a feature branch
+2. Backend changes: ensure Python 3.9 compatibility (`Optional[str]` not `str | None`)
+3. Add new skills to `SKILL_TAXONOMY` in `app/rag_pipeline.py` — no logic changes needed
+4. Test both with and without a Supabase session (auth is optional)
+5. Open a pull request with a clear description of what changed and why

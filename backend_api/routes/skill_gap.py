@@ -10,7 +10,22 @@ from backend_api.services import resume_service, skill_gap_service
 router = APIRouter()
 
 
-@router.post("/skill-gap", response_model=SkillGapResponse)
+@router.post(
+    "/skill-gap",
+    response_model=SkillGapResponse,
+    summary="Analyse skill gaps between a resume and a job description",
+    description=(
+        "Compares extracted resume skills against a reference skill set (from a provided JD "
+        "or a general market baseline). Returns missing skills, semantic gaps, a match score, "
+        "and category-specific upskilling recommendations. "
+        "Pass `resume_skills` from a previous upload response to skip re-running the ML pipeline."
+    ),
+    responses={
+        404: {"description": "Resume not found — upload first"},
+        422: {"description": "Validation error (invalid UUID, JD too long, etc.)"},
+        500: {"description": "Skill gap analysis failed"},
+    },
+)
 async def skill_gap(
     body: SkillGapRequest,
     user_id: Optional[str] = Depends(optional_user),
@@ -22,7 +37,7 @@ async def skill_gap(
 
     try:
         data = await asyncio.to_thread(
-            skill_gap_service.analyze, path, body.jd_text
+            skill_gap_service.analyze, path, body.jd_text, body.resume_skills
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Skill gap analysis failed: {exc}")

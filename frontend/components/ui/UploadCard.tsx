@@ -24,10 +24,18 @@ export default function UploadCard({
 }: UploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
   const handleFile = async (file: File) => {
+    setClientError(null);
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      alert("Please upload a PDF file.");
+      setClientError("Only PDF files are accepted.");
+      return;
+    }
+    if (file.size > MAX_SIZE_BYTES) {
+      setClientError("File exceeds the 5 MB limit. Please use a smaller PDF.");
       return;
     }
     await onUpload(file);
@@ -56,7 +64,7 @@ export default function UploadCard({
       />
 
       <motion.div
-        onClick={() => !isProcessing && inputRef.current?.click()}
+        onClick={() => { if (!isProcessing) { setClientError(null); inputRef.current?.click(); } }}
         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
@@ -67,7 +75,7 @@ export default function UploadCard({
             ? "border-purple-500 bg-purple-500/5"
             : isSuccess
             ? "border-emerald-500/40 bg-emerald-500/5 cursor-default"
-            : error
+            : (clientError || error)
             ? "border-red-500/40 bg-red-500/5 cursor-default"
             : isProcessing
             ? "border-purple-500/40 bg-purple-500/5 cursor-default"
@@ -124,7 +132,7 @@ export default function UploadCard({
                 Click to upload a different resume
               </p>
             </motion.div>
-          ) : error ? (
+          ) : (clientError || error) ? (
             <motion.div
               key="error"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -137,7 +145,7 @@ export default function UploadCard({
               </div>
               <div>
                 <p className="font-display font-semibold text-white">Upload Failed</p>
-                <p className="text-red-400 text-sm mt-1">{error}</p>
+                <p className="text-red-400 text-sm mt-1">{clientError || error}</p>
               </div>
               <p className="text-xs text-[#A1A1AA]">Click to try again</p>
             </motion.div>

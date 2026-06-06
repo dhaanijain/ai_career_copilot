@@ -15,9 +15,13 @@ def get_recommendations(
     query: str = "machine learning engineer",
     location: str = "",
     top_n: int = 10,
+    resume_skills: Optional[list] = None,
 ) -> dict:
-    resume_skills = run_pipeline(str(resume_path))
-    jobs_raw = recommend_jobs(str(resume_path), query=query, location=location, top_n=top_n)
+    jobs_raw = recommend_jobs(
+        str(resume_path), query=query, location=location, top_n=top_n,
+        resume_skills=resume_skills or [],
+    )
+    resume_skills = resume_skills or []
 
     jobs = []
     for job in jobs_raw:
