@@ -21,7 +21,7 @@ export default function SkillGapPage() {
 
   useEffect(() => {
     if (resumeId && !data && !loading) {
-      analyze(resumeId);
+      analyze(resumeId, undefined, resumeSkills.length ? resumeSkills : undefined);
     }
   }, [resumeId]);
 
@@ -52,7 +52,7 @@ export default function SkillGapPage() {
 
       {resumeId && !data && !loading && (
         <div className="flex justify-center mb-6">
-          <GradientButton onClick={() => analyze(resumeId)}>
+          <GradientButton onClick={() => analyze(resumeId, undefined, resumeSkills.length ? resumeSkills : undefined)}>
             <Sparkles className="w-4 h-4" />
             Analyze Skill Gap
           </GradientButton>
@@ -227,7 +227,7 @@ export default function SkillGapPage() {
                 )}
 
                 <GradientButton
-                  onClick={() => resumeId && analyze(resumeId)}
+                  onClick={() => resumeId && analyze(resumeId, undefined, resumeSkills.length ? resumeSkills : undefined)}
                   variant="outline"
                   className="w-full"
                 >

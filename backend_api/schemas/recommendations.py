@@ -7,6 +7,7 @@ class RecommendJobsRequest(BaseModel):
     query: Optional[str] = "software engineer machine learning"
     location: Optional[str] = ""
     top_n: Optional[int] = 10
+    resume_skills: Optional[List[str]] = None  # skip re-extraction if provided
 
 
 class SemanticMatchItem(BaseModel):

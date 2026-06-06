@@ -36,6 +36,7 @@ v2 — Four targeted fixes over v1:
 import re
 from typing import Dict, List, Set
 
+from .logger import get_logger
 from .rag_pipeline import (
     SKILL_TAXONOMY,
     chunk_text,
@@ -44,6 +45,8 @@ from .rag_pipeline import (
     normalize_ocr,
 )
 from .retrieval_engine import retrieve_from_text
+
+log = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # JD alias table
@@ -411,10 +414,14 @@ def extract_skills_from_text(
         Deduplicated list of canonical skill names.
     """
     if not text or not text.strip():
+        log.warning("extract_skills_from_text called with empty text")
         return []
+
+    log.info("extract_skills_from_text: input length=%d chars, confidence_threshold=%.2f", len(text), confidence_threshold)
 
     # ── Pass 1: fast scan on raw text ────────────────────────────────────────
     fast_skills = _fast_scan(text)
+    log.debug("Pass 1 (fast scan) found %d skills: %s", len(fast_skills), fast_skills)
 
     # ── Pre-processing for Pass 2 ─────────────────────────────────────────────
     # Order matters: delimiter normalisation first converts "(Lambda)." →
@@ -426,11 +433,14 @@ def extract_skills_from_text(
     proc = clean_text(proc)
 
     if not proc.strip():
+        log.warning("Text became empty after pre-processing; returning Pass 1 results only")
         return fast_skills
 
     # ── Pass 2: chunk-based extraction ────────────────────────────────────────
     if len(proc) < _RETRIEVAL_CHAR_THRESHOLD:
+        log.info("Pass 2: direct path (text length %d < threshold %d)", len(proc), _RETRIEVAL_CHAR_THRESHOLD)
         chunks = chunk_text(proc, chunk_size=400, overlap=80)
+        log.debug("Pass 2: %d chunks produced", len(chunks))
         skill_results = extract_technical_skills(
             retrieved_chunks=chunks,
             skill_section_text=proc,   # full JD = one big skill section
@@ -439,7 +449,9 @@ def extract_skills_from_text(
     else:
         # Genuinely long document: FAISS retrieval + first 3 000 chars as
         # a high-confidence skill section to catch leading requirements.
+        log.info("Pass 2: FAISS retrieval path (text length %d >= threshold %d)", len(proc), _RETRIEVAL_CHAR_THRESHOLD)
         retrieved = retrieve_from_text(proc)
+        log.debug("Pass 2: FAISS retrieved %d chunks", len(retrieved))
         skill_results = extract_technical_skills(
             retrieved_chunks=retrieved,
             skill_section_text=proc[:3_000],
@@ -447,6 +459,7 @@ def extract_skills_from_text(
         )
 
     pipeline_skills = _filter_noise([item["skill"] for item in skill_results])
+    log.debug("Pass 2 (chunk-based) found %d skills after noise filter: %s", len(pipeline_skills), pipeline_skills)
 
     # ── Merge: dedup preserving Pass 1 order ─────────────────────────────────
     seen: Set[str] = {s.lower().strip() for s in fast_skills}
@@ -456,6 +469,7 @@ def extract_skills_from_text(
             seen.add(skill.lower().strip())
             merged.append(skill)
 
+    log.info("extract_skills_from_text: merged result %d skills: %s", len(merged), merged)
     return merged
 
 

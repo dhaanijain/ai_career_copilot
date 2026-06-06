@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { recommendJobs } from "@/services/api";
-import { RecommendationsResponse } from "@/types";
+import { useResume } from "@/context/ResumeContext";
 
 export function useJobRecommendations() {
-  const [data, setData] = useState<RecommendationsResponse | null>(null);
+  const { jobsData, setJobsData } = useResume();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
@@ -14,11 +14,12 @@ export function useJobRecommendations() {
     resumeId: string,
     query?: string,
     location?: string,
-    topN?: number
+    topN?: number,
+    resumeSkills?: string[]
   ) => {
     setLoading(true);
     setError(null);
-    setData(null);
+    setJobsData(null);
 
     try {
       setStatusMessage("Fetching live jobs from Adzuna...");
@@ -27,9 +28,10 @@ export function useJobRecommendations() {
         query,
         location,
         top_n: topN ?? 10,
+        resume_skills: resumeSkills,
       });
       setStatusMessage("Ranking recommendations...");
-      setData(res);
+      setJobsData(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to fetch recommendations");
     } finally {
@@ -38,5 +40,5 @@ export function useJobRecommendations() {
     }
   };
 
-  return { fetch, data, loading, error, statusMessage };
+  return { fetch, data: jobsData, loading, error, statusMessage };
 }

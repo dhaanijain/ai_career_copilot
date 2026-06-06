@@ -27,6 +27,13 @@ import numpy as np
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import Dict, List, NoReturn, Optional, Set, Tuple
 
+try:
+    from .logger import get_logger  # works when imported as a package module
+except ImportError:
+    from app.logger import get_logger  # fallback for direct-script invocation
+
+log = get_logger(__name__)
+
 # import pandas as pd
 
 
@@ -314,6 +321,7 @@ def _find_poppler_path() -> Optional[str]:
         pdftoppm = os.path.join(env_path, "pdftoppm.exe" if platform.system() == "Windows" else "pdftoppm")
         if os.path.isfile(pdftoppm):
             return env_path
+        log.warning("POPPLER_PATH is set to '%s' but pdftoppm was not found there.", env_path)
         print(f"  ⚠  POPPLER_PATH is set to '{env_path}' but pdftoppm was not found there.")
 
     if platform.system() != "Windows":
@@ -352,6 +360,7 @@ def _ocr_fallback(path: str) -> str:
     except PDFInfoNotInstalledError:  # type: ignore[possibly-unbound]
         _raise_poppler_missing_error(poppler_path)
     except Exception as exc:
+        log.error("pdf2image conversion failed for '%s': %s", path, exc, exc_info=True)
         raise RuntimeError(f"pdf2image conversion failed: {exc}") from exc
 
     text = ""
@@ -408,18 +417,23 @@ def load_pdf(path: str) -> str:
                 text += extracted + "\n"
 
     if len(text.strip()) >= 100:
+        log.info("PDF text layer OK: %d chars extracted from '%s'", len(text), path)
         return text
 
     # Text layer is sparse — attempt OCR
     if os.environ.get("SKIP_OCR", "").strip() == "1":
+        log.warning("Sparse text layer in '%s' but SKIP_OCR=1 — returning partial text (%d chars)", path, len(text))
         print("  ⚠  sparse text layer but SKIP_OCR=1 — returning partial text")
         return text
 
+    log.warning("Sparse text layer in '%s' (%d chars) — engaging OCR at 300 DPI", path, len(text))
     print("  ⚠  sparse text layer — engaging OCR at 300 DPI")
     try:
         text += _ocr_fallback(path)
+        log.info("OCR completed for '%s': total %d chars", path, len(text))
     except RuntimeError as exc:
         # Surface the full message so the user sees exactly what to do
+        log.error("OCR failed for '%s': %s", path, exc, exc_info=True)
         print(str(exc))
         print("  ⚠  OCR failed — returning partial text from pdfplumber")
 
@@ -774,41 +788,57 @@ def run_pipeline(resume_path: str, confidence_threshold: float = 0.5) -> List[st
     confidence_threshold: raise to 0.8 for stricter (whitelist-only) output;
     lower to 0.4 to surface more unknowns from skill sections.
     """
+    log.info("=== run_pipeline START: resume='%s', confidence_threshold=%.2f ===", resume_path, confidence_threshold)
     print(f"\n{'─'*50}")
     print(f"  AI Career Copilot — Resume Skill Extraction")
     print(f"{'─'*50}\n")
 
     print("📂  [1/7] Loading PDF...")
+    log.info("[1/7] Loading PDF: %s", resume_path)
     raw_text = load_pdf(resume_path)
+    log.info("[1/7] PDF loaded: %d chars", len(raw_text))
     print(f"      {len(raw_text)} characters extracted")
 
     print("🔧  [2/7] Normalising OCR artefacts...")
+    log.info("[2/7] Normalising OCR artefacts")
     raw_text = normalize_ocr(raw_text)
 
     print("🧹  [3/7] Cleaning text...")
+    log.info("[3/7] Cleaning text")
     clean = clean_text(raw_text)
+    log.debug("[3/7] Clean text length: %d chars", len(clean))
 
     print("🗂   [4/7] Detecting skill sections...")
+    log.info("[4/7] Detecting skill sections")
     skill_section_text, full_text = extract_skill_sections(clean)
+    log.info("[4/7] Skill section: %d chars | full doc: %d chars", len(skill_section_text), len(full_text))
     print(f"      skill section: {len(skill_section_text)} chars  |  full doc: {len(full_text)} chars")
 
     print("✂   [5/7] Chunking + deduplication...")
+    log.info("[5/7] Chunking and deduplicating")
     chunks = chunk_text(full_text)
+    log.info("[5/7] %d unique chunks produced", len(chunks))
     print(f"      {len(chunks)} unique chunks")
 
     print("🔢  [6/7] Embedding + indexing (cosine)...")
+    log.info("[6/7] Embedding %d chunks and building FAISS index", len(chunks))
     embeddings = embed(chunks)
     index = build_index(embeddings)
+    log.debug("[6/7] Embedding shape: %s", embeddings.shape)
 
     print("🔍  [7/7] Multi-query retrieval + skill extraction...")
+    log.info("[7/7] Running multi-query retrieval (confidence_threshold=%.2f)", confidence_threshold)
     retrieved = retrieve_chunks(RETRIEVAL_QUERIES, index, chunks, embeddings)
+    log.debug("[7/7] Retrieved %d chunks for skill extraction", len(retrieved))
     skill_results = extract_technical_skills(
         retrieved_chunks=retrieved,
         skill_section_text=skill_section_text,
         confidence_threshold=confidence_threshold,
     )
 
-    return [item["skill"] for item in skill_results]
+    skills = [item["skill"] for item in skill_results]
+    log.info("=== run_pipeline END: %d skills extracted: %s ===", len(skills), skills)
+    return skills
 
 
 # =============================================================================
@@ -816,8 +846,18 @@ def run_pipeline(resume_path: str, confidence_threshold: float = 0.5) -> List[st
 # =============================================================================
 
 if __name__ == "__main__":
+    from app.logger import log_file_path
+    print(f"  Log file → {log_file_path()}")
+    log.info("CLI invoked with args: %s", sys.argv)
+
     path = sys.argv[1] if len(sys.argv) > 1 else "data/Dhaani_Jain_resume.pdf"
-    skills = run_pipeline(path)
+    try:
+        skills = run_pipeline(path)
+    except Exception as _exc:
+        log.error("Fatal error during pipeline execution", exc_info=True)
+        print(f"\n  ERROR: {_exc}")
+        print(f"  Full traceback written to: {log_file_path()}")
+        sys.exit(1)
 
     print(f"\n{'═'*50}")
     print("  EXTRACTED TECHNICAL SKILLS")

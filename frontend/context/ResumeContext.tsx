@@ -7,6 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import type { SkillGapResponse, RecommendationsResponse } from "@/types";
 
 interface ResumeSession {
   resumeId: string | null;
@@ -17,6 +18,11 @@ interface ResumeSession {
 interface ResumeContextValue extends ResumeSession {
   setSession: (session: Partial<ResumeSession>) => void;
   clearSession: () => void;
+  // Cached results — persist across navigation
+  skillGapData: SkillGapResponse | null;
+  setSkillGapData: (data: SkillGapResponse | null) => void;
+  jobsData: RecommendationsResponse | null;
+  setJobsData: (data: RecommendationsResponse | null) => void;
 }
 
 const ResumeContext = createContext<ResumeContextValue | null>(null);
@@ -29,6 +35,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     resumeSkills: [],
     fileName: null,
   });
+  const [skillGapData, setSkillGapData] = useState<SkillGapResponse | null>(null);
+  const [jobsData, setJobsData] = useState<RecommendationsResponse | null>(null);
 
   useEffect(() => {
     try {
@@ -43,16 +51,31 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
+    // Clear cached results when a new resume is uploaded
+    if (patch.resumeId !== undefined) {
+      setSkillGapData(null);
+      setJobsData(null);
+    }
   };
 
   const clearSession = () => {
     localStorage.removeItem(STORAGE_KEY);
     setSessionState({ resumeId: null, resumeSkills: [], fileName: null });
+    setSkillGapData(null);
+    setJobsData(null);
   };
 
   return (
     <ResumeContext.Provider
-      value={{ ...session, setSession, clearSession }}
+      value={{
+        ...session,
+        setSession,
+        clearSession,
+        skillGapData,
+        setSkillGapData,
+        jobsData,
+        setJobsData,
+      }}
     >
       {children}
     </ResumeContext.Provider>

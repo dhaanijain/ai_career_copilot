@@ -22,7 +22,7 @@ async def skill_gap(
 
     try:
         data = await asyncio.to_thread(
-            skill_gap_service.analyze, path, body.jd_text
+            skill_gap_service.analyze, path, body.jd_text, body.resume_skills
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Skill gap analysis failed: {exc}")

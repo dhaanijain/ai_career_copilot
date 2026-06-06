@@ -43,6 +43,7 @@ export interface RecommendJobsRequest {
   query?: string;
   location?: string;
   top_n?: number;
+  resume_skills?: string[];
 }
 
 export interface RecommendationsResponse {
@@ -54,6 +55,7 @@ export interface RecommendationsResponse {
 export interface SkillGapRequest {
   resume_id: string;
   jd_text?: string;
+  resume_skills?: string[];
 }
 
 export interface SkillGapResponse {

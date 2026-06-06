@@ -5,6 +5,7 @@ from typing import List, Dict, Optional
 class SkillGapRequest(BaseModel):
     resume_id: str
     jd_text: Optional[str] = None
+    resume_skills: Optional[List[str]] = None  # skip re-extraction if provided
 
 
 class SemanticGapItem(BaseModel):

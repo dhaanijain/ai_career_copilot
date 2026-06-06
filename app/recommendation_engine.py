@@ -227,15 +227,17 @@ def recommend_jobs(
     query: str = "Machine Learning Engineer",
     location: str = "India",
     top_n: int = 5,
+    resume_skills: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Full AI-powered job recommendation pipeline.
 
     Args:
-        resume_path: Path to a PDF resume (absolute or relative to CWD).
-        query:       Adzuna search query — job title or role keywords.
-        location:    Geographic filter passed to Adzuna (e.g. "India", "Bangalore").
-        top_n:       Number of top recommendations to return and save.
+        resume_path:   Path to a PDF resume (absolute or relative to CWD).
+        query:         Adzuna search query — job title or role keywords.
+        location:      Geographic filter passed to Adzuna (e.g. "India", "Bangalore").
+        top_n:         Number of top recommendations to return and save.
+        resume_skills: Pre-extracted skills — if provided, skips the RAG pipeline.
 
     Returns:
         List of recommendation dicts — each with:
@@ -250,7 +252,8 @@ def recommend_jobs(
         raise FileNotFoundError(f"Resume not found: {resume_path!r}")
 
     # ── Step 1: Resume skill extraction ──────────────────────────────────────
-    resume_skills = run_pipeline(resume_path)
+    if not resume_skills:
+        resume_skills = run_pipeline(resume_path)
     if not resume_skills:
         logger.warning("No skills extracted from resume — recommendation quality will be low.")
 

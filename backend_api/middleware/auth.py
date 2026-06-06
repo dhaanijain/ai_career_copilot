@@ -17,7 +17,7 @@ For routes that optionally save to the database when authenticated:
 from fastapi import Depends, Header, HTTPException, status
 from typing import Optional
 
-from app.config.supabase import get_supabase_client
+from app.config.supabase import get_supabase_anon_client
 
 
 def _verify_token(token: str) -> str:
@@ -26,7 +26,7 @@ def _verify_token(token: str) -> str:
     Returns the user's UUID string on success, raises HTTPException on failure.
     """
     try:
-        client = get_supabase_client()
+        client = get_supabase_anon_client()
         response = client.auth.get_user(token)
         if response.user is None:
             raise HTTPException(

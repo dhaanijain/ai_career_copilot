@@ -36,6 +36,7 @@ async def recommend_jobs(
             query,
             location,
             top_n,
+            body.resume_skills,
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Recommendation failed: {exc}")
