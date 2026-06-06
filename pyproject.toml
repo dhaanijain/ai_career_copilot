@@ -1,0 +1,42 @@
+[project]
+name = "ai-career-copilot"
+version = "0.1.0"
+description = "RAG pipeline for resume skill extraction + semantic Resume ↔ JD matching"
+requires-python = ">=3.13"
+dependencies = [
+    # Web framework
+    "fastapi==0.136.3",
+    "uvicorn[standard]==0.48.0",
+    "python-multipart==0.0.29",
+    "aiofiles==25.1.0",
+    # ML / NLP pipeline
+    "sentence-transformers==5.5.0",
+    "faiss-cpu==1.13.2",
+    "numpy==2.4.5",
+    "langchain-text-splitters==1.1.2",
+    # PDF processing
+    "pdfplumber==0.11.9",
+    "pytesseract==0.3.13",
+    "pdf2image==1.17.0",
+    "Pillow==12.2.0",
+    # Supabase
+    "supabase==2.30.1",
+    # HTTP / external APIs
+    "requests==2.34.2",
+    # Utilities
+    "python-dotenv==1.2.2",
+]
+
+[project.scripts]
+extract = "app.rag_pipeline:main"
+match = "app.jd_matcher:main"
+serve = "backend_api.main:serve"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app", "backend_api"]
+
+[tool.uv]

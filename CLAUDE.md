@@ -9,23 +9,29 @@ AI Career Copilot — RAG pipeline for resume skill extraction + semantic Resume
 ## Setup & Commands
 
 ```bash
-# Activate virtual environment (Windows)
-venv\Scripts\activate
+# Create venv and install all dependencies (uv — recommended)
+uv sync
 
-# Install dependencies
+# Run commands via uv
+uv run python app/rag_pipeline.py [resume.pdf]
+uv run python -m app.jd_matcher
+uv run python -m app.jd_matcher data/resume.pdf data/job_posting.txt
+
+# Add / remove a dependency
+uv add <package>
+uv remove <package>
+```
+
+Legacy pip workflow (still works):
+
+```bash
 pip install -r requirements.txt
-
-# Resume skill extraction only
 python app/rag_pipeline.py [resume.pdf]
-
-# Full Resume ↔ JD matching (uses built-in example JD)
 python -m app.jd_matcher
-
-# With a custom resume and JD text file
 python -m app.jd_matcher data/resume.pdf data/job_posting.txt
 ```
 
-No test runner, linter, or build system is configured yet.
+No test runner or linter is configured yet.
 
 ## Architecture
 

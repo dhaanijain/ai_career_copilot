@@ -75,3 +75,14 @@ app.include_router(skill_gap.router, prefix=API_PREFIX, tags=["Skill Gap"])
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "ok", "version": "1.0.0"}
+
+
+def serve() -> None:
+    """Entry point for `uv run serve` / `serve` CLI command."""
+    import uvicorn
+    uvicorn.run(
+        "backend_api.main:app",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", "8000")),
+        reload=True,
+    )

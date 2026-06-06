@@ -151,9 +151,10 @@ ai_career_copilot/
 ├── data/                         # Sample resumes
 ├── logs/                         # Auto-created; rotating log files (gitignored)
 ├── outputs/                      # CLI JSON match reports
+├── pyproject.toml                # Project metadata, dependencies, uv scripts
+├── uv.lock                       # Locked dependency tree (committed)
 ├── .env                          # Backend environment variables (not committed)
-├── frontend/.env.local           # Frontend environment variables (not committed)
-└── requirements.txt
+└── frontend/.env.local           # Frontend environment variables (not committed)
 ```
 
 ---
@@ -194,7 +195,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-anon-key>
 
 | Tool | Version | Notes |
 |---|---|---|
-| Python | 3.9+ | 3.10+ works too |
+| Python | 3.13.5+ | Managed automatically by uv |
+| uv | latest | `pip install uv` or `brew install uv` |
 | Node.js | 18+ | LTS recommended |
 | Tesseract OCR | 4.x+ | Required for image-based PDFs |
 | Poppler | latest | Required for `pdf2image` |
@@ -222,23 +224,18 @@ Windows:
 git clone <repo-url>
 cd ai_career_copilot
 
-# 2. Create and activate virtual environment
-python -m venv venv
+# 2. Install uv (if not already installed)
+pip install uv
+# or: brew install uv
 
-# macOS/Linux
-source venv/bin/activate
-
-# Windows
-venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
+# 3. Install Python 3.13.5 + all dependencies (uv handles the venv automatically)
+uv sync
 
 # 4. Create .env file (see Environment Variables above)
 cp .env.example .env   # then fill in your values
 
 # 5. Start the backend
-uvicorn backend_api.main:app --reload --port 8000
+uv run serve
 ```
 
 The API is now available at `http://localhost:8000`.  
@@ -268,20 +265,20 @@ You need **two terminals** running simultaneously:
 
 | Terminal | Command | URL |
 |---|---|---|
-| Backend | `uvicorn backend_api.main:app --reload --port 8000` | http://localhost:8000 |
+| Backend | `uv run serve` | http://localhost:8000 |
 | Frontend | `cd frontend && npm run dev` | http://localhost:3000 |
 
 ### CLI Usage (backend only, no frontend)
 
 ```bash
 # Resume skill extraction only
-python app/rag_pipeline.py data/resume.pdf
+uv run extract data/resume.pdf
 
 # Resume vs JD matching (uses built-in example JD)
-python -m app.jd_matcher
+uv run match
 
 # With custom resume and JD
-python -m app.jd_matcher data/resume.pdf data/job_posting.txt
+uv run match data/resume.pdf data/job_posting.txt
 ```
 
 ---
@@ -496,7 +493,7 @@ tail -f logs/copilot.log
 ## Contributing
 
 1. Fork the repo and create a feature branch
-2. Backend changes: ensure Python 3.9 compatibility (`Optional[str]` not `str | None`)
+2. Run `uv sync` after pulling to keep your environment in sync with `uv.lock`
 3. Add new skills to `SKILL_TAXONOMY` in `app/rag_pipeline.py` — no logic changes needed
 4. Test both with and without a Supabase session (auth is optional)
 5. Open a pull request with a clear description of what changed and why
