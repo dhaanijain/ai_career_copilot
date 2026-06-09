@@ -7,6 +7,7 @@ AI-powered platform that extracts skills from resumes, matches them against job 
 ## Table of Contents
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
@@ -34,6 +35,22 @@ AI-powered platform that extracts skills from resumes, matches them against job 
 | Skill Gap Analysis | Compares resume skills against a JD or market baseline; returns recommendations |
 | Live Job Recommendations | Fetches from Adzuna API, ranks results by semantic match score |
 | Auth | Optional Supabase JWT auth; results persisted to your account when signed in |
+
+---
+
+## Screenshots
+
+### Landing Page
+![Landing Page](docs/screenshots/homepage.png)
+
+### Resume Analysis — AI Resume Parser
+![Resume Analysis](docs/screenshots/resume-analysis.png)
+
+### Job Recommendations — Live Job Matches
+![Job Recommendations](docs/screenshots/job-recommendations.png)
+
+### Skill Gap Analysis
+![Skill Gap Analysis](docs/screenshots/skill-gap.png)
 
 ---
 
