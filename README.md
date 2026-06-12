@@ -58,12 +58,12 @@ AI-powered platform that extracts skills from resumes, matches them against job 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Next.js 14 Frontend                       │
+│                    Next.js 14 Frontend                      │
 │   (App Router · Tailwind · Framer Motion · Supabase Auth)   │
 └─────────────────────────┬───────────────────────────────────┘
                           │ HTTP  /api/v1/*
-┌─────────────────────────▼───────────────────────────────────┐
-│                  FastAPI Backend  (Python)                    │
+┌─────────────────────────▼────────────────────────────────────┐
+│                  FastAPI Backend  (Python)                   │
 │                                                              │
 │  POST /api/v1/upload-resume                                  │
 │    └─▶ resume_service → RAG Pipeline                         │
@@ -71,17 +71,17 @@ AI-powered platform that extracts skills from resumes, matches them against job 
 │         → SentenceTransformer embed → FAISS → skill extract  │
 │                                                              │
 │  POST /api/v1/match-jd                                       │
-│    └─▶ jd_service → skill_extractor → scoring_engine        │
-│         exact match + cosine similarity ≥ 0.80              │
+│    └─▶ jd_service → skill_extractor → scoring_engine         │
+│         exact match + cosine similarity ≥ 0.80               │
 │                                                              │
 │  POST /api/v1/skill-gap                                      │
 │    └─▶ skill_gap_service → scoring_engine                    │
-│         resume skills vs JD / market baseline               │
+│         resume skills vs JD / market baseline                │
 │                                                              │
 │  POST /api/v1/recommend-jobs                                 │
-│    └─▶ recommendation_engine → Adzuna API → scoring_engine  │
+│    └─▶ recommendation_engine → Adzuna API → scoring_engine   │
 │         live jobs ranked by semantic match                   │
-└──────────────────┬──────────────────────┬───────────────────┘
+└──────────────────┬──────────────────────┬────────────────────┘
                    │                      │
          ┌─────────▼──────┐    ┌──────────▼────────┐
          │  Supabase DB   │    │  Supabase Storage  │
